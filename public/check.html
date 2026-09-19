@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CrimsonZone proxy self-test</title>
+<!--
+  CrimsonZone - proxy self-test page
+  Copyright (c) 2026 CrimsonZone contributors
+  Licensed under AGPL-3.0-only. Source: https://github.com/worldofprodigyteam36-svg/CrimsonZone
+-->
+<style>
+  body{font:15px/1.5 system-ui,sans-serif;background:#140708;color:#f3e6e6;max-width:760px;margin:0 auto;padding:20px}
+  h1{font-size:1.3rem;margin:0 0 4px} p{margin:.3em 0;color:#c9b0b0}
+  button{background:#c1121f;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:1rem;cursor:pointer;margin:12px 0}
+  .row{padding:8px 10px;border-radius:8px;margin:6px 0;background:#231012;white-space:pre-wrap;word-break:break-word}
+  .ok{border-left:4px solid #2ecc71}.bad{border-left:4px solid #ff4d4d}.warn{border-left:4px solid #f1c40f}.info{border-left:4px solid #666}
+  b{color:#fff} code{color:#ffb3b3}
+</style>
+</head>
+<body>
+<h1>Proxy self-test</h1>
+<p>Open this page in its own browser tab (not inside an embedded preview), then press the button. Copy or screenshot everything below.</p>
+<button id="go">Run test</button>
+<div id="out"></div>
+
+<script src="/baremux/index.js"></script>
+<script>
+const out = document.getElementById('out');
+function line(kind, text){ const d=document.createElement('div'); d.className='row '+kind; d.textContent=(kind==='ok'?'PASS  ':kind==='bad'?'FAIL  ':kind==='warn'?'WARN  ':'INFO  ')+text; out.appendChild(d); }
+const withTimeout = (p, ms, label) => Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error(label+' timed out after '+ms+'ms')),ms))]);
+const errText = e => (e && (e.name ? e.name+': ' : '') + (e.message || e)) || String(e);
+
+async function run(){
+  out.innerHTML=''; document.getElementById('go').disabled=true;
+  try{
+    // 1. environment
+    line('info', 'Browser: '+navigator.userAgent);
+    line(window.isSecureContext?'ok':'bad', 'Secure context (needed for service workers): '+window.isSecureContext);
+    line(window.top===window.self?'ok':'bad', 'Top-level tab (not inside an iframe/preview): '+(window.top===window.self));
+    line('serviceWorker' in navigator?'ok':'bad', 'Service workers available: '+('serviceWorker' in navigator));
+    line(typeof SharedWorker!=='undefined'?'ok':'bad', 'SharedWorker available: '+(typeof SharedWorker!=='undefined'));
+    line(typeof BareMux!=='undefined'?'ok':'bad', 'BareMux library loaded: '+(typeof BareMux!=='undefined'));
+
+    // 2. files the workers need
+    const files = ['/uv/sw.js','/uv/uv.bundle.js','/uv/uv.config.js','/uv/uv.sw.js','/baremux/worker.js','/epoxy/index.mjs','/epoxy-compat/index.mjs'];
+    for (const f of files){
+      try{
+        const r = await withTimeout(fetch(f,{cache:'no-store'}), 8000, f);
+        const ct = r.headers.get('content-type')||'';
+        const head = (await r.text()).slice(0,60).replace(/\s+/g,' ');
+        const isHtml = /<!doctype|<html/i.test(head);
+        const good = r.ok && /javascript/i.test(ct) && !isHtml;
+        line(good?'ok':'bad', f+'  ->  HTTP '+r.status+', '+ct+(good?'':'   starts with: '+head));
+      }catch(e){ line('bad', f+'  ->  '+errText(e)); }
+    }
+
+    // 3. service worker registration
+    if('serviceWorker' in navigator){
+      try{
+        const regs = await navigator.serviceWorker.getRegistrations();
+        line('info','Existing service worker registrations: '+(regs.length?regs.map(r=>r.scope+' ['+((r.active||r.waiting||r.installing||{}).state||'none')+']').join(', '):'none'));
+        const reg = await withTimeout(navigator.serviceWorker.register('/uv/sw.js',{scope:'/'}), 10000, 'service worker register');
+        line('ok','Service worker registered, scope '+reg.scope);
+        await withTimeout(navigator.serviceWorker.ready, 10000, 'service worker ready');
+        line('ok','Service worker is active. Controlling this page: '+!!navigator.serviceWorker.controller);
+      }catch(e){ line('bad','Service worker registration failed:  '+errText(e)); }
+    }
+
+    // 4. Wisp websocket
+    try{
+      const proto = location.protocol==='https:'?'wss:':'ws:';
+      const got = await withTimeout(new Promise((res,rej)=>{
+        const ws=new WebSocket(proto+'//'+location.host+'/wisp/'); ws.binaryType='arraybuffer';
+        ws.onmessage=m=>{res(new Uint8Array(m.data)[0]); ws.close();};
+        ws.onerror=()=>rej(new Error('websocket error'));
+        ws.onclose=e=>rej(new Error('websocket closed early (code '+e.code+')'));
+      }), 6000, 'Wisp websocket');
+      line('ok','Wisp websocket connects and the server answers (first packet type '+got+')');
+    }catch(e){ line('bad','Wisp websocket:  '+errText(e)); }
+
+    // 5. BareMux shared worker + transport
+    let conn=null;
+    try{
+      conn = new BareMux.BareMuxConnection('/baremux/worker.js');
+      const proto = location.protocol==='https:'?'wss:':'ws:';
+      await withTimeout(conn.setTransport('/epoxy-compat/index.mjs',[{wisp:proto+'//'+location.host+'/wisp/'}]), 10000, 'setTransport');
+      line('ok','BareMux shared worker started and the Epoxy transport loaded');
+    }catch(e){ line('bad','BareMux / transport setup:  '+errText(e)); conn=null; }
+
+    // 6. real request through the whole chain (internet needed)
+    if(conn){
+      try{
+        const client = new BareMux.BareClient();
+        const r = await withTimeout(client.fetch('https://example.com/'), 15000, 'test request');
+        const t = (await r.text()).slice(0,200);
+        line(r.status===200 && /Example Domain/i.test(t)?'ok':'warn','Request to https://example.com through the proxy:  HTTP '+r.status+(/Example Domain/i.test(t)?'  (correct page received)':'  (unexpected content)'));
+      }catch(e){ line('bad','Request through the proxy:  '+errText(e)+'   (if everything above passed, the host is likely blocking outgoing connections)'); }
+    }
+    line('info','Done. Copy everything above and send it to whoever is helping you.');
+  }catch(e){ line('bad','Unexpected error: '+errText(e)); }
+  document.getElementById('go').disabled=false;
+}
+document.getElementById('go').onclick=run;
+</script>
+</body>
+</html>
