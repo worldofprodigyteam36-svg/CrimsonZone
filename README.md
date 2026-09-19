@@ -10,7 +10,7 @@ A modern, lightweight unblocked games platform with integrated apps, tools, and 
 - **Lightweight & Fast** — Built with vanilla JavaScript, HTML, and CSS (no heavy frameworks)
 - **Polished UI** — Clean crimson/red themed design with responsive layout
 - **Dynamic Content** — All content easily managed via JSON configuration
-- **Proxy Integration** — Built-in Scramjet web proxy for external site access
+- **Proxy Integration** — Built-in Ultraviolet web proxy for external site access
 - **Fully Responsive** — Optimized for desktop, tablet, and mobile devices
 - **Search & Filter** — Find content quickly with integrated search functionality
 - **Highly Customizable** — Expand with new games, apps, and tools in minutes
