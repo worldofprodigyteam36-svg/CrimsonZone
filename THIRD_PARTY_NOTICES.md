@@ -16,15 +16,16 @@ Each remains under its own license. Full license texts ship with each package
 
 ## Ultraviolet (bundled in public/uv/)
 
-Version 3.2.10 of `@titaniumnetwork-dev/ultraviolet` is internally inconsistent:
-its `package.json` declares `"license": "MIT"`, but the `LICENSE` file shipped in
-the same package is the full GNU AGPL v3 text.
+Upstream: https://github.com/titaniumnetwork-dev/Ultraviolet
+Version bundled: 3.2.10
 
-Because CrimsonZone is distributed under AGPL-3.0-only, the combined work is
-compatible with either reading. To remove the ambiguity, check the upstream
-repository (https://github.com/titaniumnetwork-dev/Ultraviolet) for its current
-license and copyright holder, and paste the exact upstream copyright line here
-before publishing. Do not assume MIT.
+Upstream's own metadata is inconsistent: its `package.json` declares
+`"license": "MIT"`, but the `LICENSE` file in its repository (checked
+2026-09-19) is the unmodified GNU Affero General Public License v3 text,
+with no project-specific copyright line. CrimsonZone treats Ultraviolet as
+AGPL-3.0, which is the conservative reading, and CrimsonZone itself is
+distributed under AGPL-3.0-only, so the combined work is compatible with
+either reading.
 
 ## Original CrimsonZone code
 
