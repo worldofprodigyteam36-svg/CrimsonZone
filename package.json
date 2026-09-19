@@ -1,0 +1,38 @@
+{
+  "name": "crimsonzone",
+  "version": "1.0.0",
+  "description": "CrimsonZone",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "pm2": "pm2 start ecosystem.config.js"
+  },
+  "keywords": [
+    "unblocked",
+    "games",
+    "proxy",
+    "crimsonzone"
+  ],
+  "author": "CrimsonZone",
+  "license": "AGPL-3.0-only",
+  "dependencies": {
+    "@fastify/static": "^9.3.0",
+    "@mercuryworkshop/bare-mux": "^2.1.9",
+    "@mercuryworkshop/epoxy-transport": "^3.0.1",
+    "@mercuryworkshop/wisp-js": "^0.4.1",
+    "@titaniumnetwork-dev/ultraviolet": "^3.2.10",
+    "cors": "^2.8.6",
+    "express": "^4.22.3",
+    "fastify": "^5.12.5",
+    "helmet": "^8.3.0",
+    "morgan": "^1.12.1",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
