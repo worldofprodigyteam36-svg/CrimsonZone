@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "title": "2048",
+    "url": "https://gabrielecirulli.github.io/2048/",
+    "description": "Classic puzzle game",
+    "category": "Puzzle"
+  },
+  {
+    "title": "Minecraft (Eaglercraft)",
+    "url": "https://eaglercraft.com/",
+    "description": "Open-source browser-based Minecraft client",
+    "category": "Sandbox"
+  },
+  {
+    "title": "Hitbox.io",
+    "url": "https://hitbox.io/",
+    "description": "Multiplayer arena game",
+    "category": "Action"
+  }
+]
