@@ -16,11 +16,5 @@
     "url": "https://hitbox.io/",
     "description": "Multiplayer arena game",
     "category": "Action"
-  },
-  {
-    "title": "Roblox",
-    "url": "https://www.roblox.com/",
-    "description": "Official Roblox platform (requires account)",
-    "category": "Sandbox"
   }
 ]
