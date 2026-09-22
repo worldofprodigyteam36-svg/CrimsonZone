@@ -21,6 +21,13 @@
       display: flex; flex-direction: column; height: 100vh; width: 100%;
       background: var(--bg-2);
     }
+    /* CSS fallback for when the real Fullscreen API is blocked (e.g. inside an
+       editor's embedded preview iframe, which typically lacks allowfullscreen).
+       Pins the browser chrome over everything else so it still fills the screen. */
+    .browser.fake-fullscreen {
+      position: fixed; inset: 0; z-index: 2147483647; height: 100%;
+    }
+    body.fake-fullscreen-body { overflow: hidden; }
 
     /* ── Tab strip ── */
     .browser-tabstrip {
@@ -724,10 +731,57 @@
         const t = currentTab();
         if (t && t.iframe) { try { t.iframe.contentWindow.history.forward(); } catch (e) {} }
       });
-      els.fullscreen.addEventListener('click', () => {
+      // ── Fullscreen ──
+      // Real Fullscreen API first; falls back to a CSS "maximized" mode if the
+      // browser/embedding context blocks it (e.g. inside an iframe without
+      // allowfullscreen, which is how some editor preview panes load pages).
+      function isNativeFullscreenActive() {
+        return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+      }
+      async function requestNativeFullscreen(el) {
+        const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+        if (!req) throw new Error('Fullscreen API not supported in this browser.');
+        await req.call(el);
+      }
+      async function exitNativeFullscreen() {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+        if (exit) await exit.call(document);
+      }
+      function setFallbackFullscreen(on) {
+        document.getElementById('browser').classList.toggle('fake-fullscreen', on);
+        document.body.classList.toggle('fake-fullscreen-body', on);
+      }
+
+      let usingFallbackFullscreen = false;
+
+      async function toggleFullscreen() {
         const browserEl = document.getElementById('browser');
-        if (!document.fullscreenElement) browserEl.requestFullscreen().catch(() => {});
-        else document.exitFullscreen().catch(() => {});
+        if (isNativeFullscreenActive() || usingFallbackFullscreen) {
+          try { await exitNativeFullscreen(); } catch (e) {}
+          setFallbackFullscreen(false);
+          usingFallbackFullscreen = false;
+          return;
+        }
+        if (document.fullscreenEnabled === false) {
+          // Blocked by the browser/embedding context (no point even trying the API).
+          setFallbackFullscreen(true);
+          usingFallbackFullscreen = true;
+          showToast('Fullscreen is blocked here, so this only maximizes within the page. Open the site in its own tab for true fullscreen.');
+          return;
+        }
+        try {
+          await requestNativeFullscreen(browserEl);
+        } catch (err) {
+          console.error('[CZ] fullscreen failed:', err);
+          setFallbackFullscreen(true);
+          usingFallbackFullscreen = true;
+          showToast('Fullscreen is blocked here, so this only maximizes within the page. Open the site in its own tab for true fullscreen.');
+        }
+      }
+
+      els.fullscreen.addEventListener('click', toggleFullscreen);
+      document.addEventListener('fullscreenchange', () => {
+        if (!isNativeFullscreenActive() && usingFallbackFullscreen === false) setFallbackFullscreen(false);
       });
       els.closeBtn.addEventListener('click', () => {
         const t = currentTab();
