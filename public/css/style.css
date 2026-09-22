@@ -404,11 +404,11 @@ body {
 .proxy-input-wrap:focus-within {
   border-color: var(--crimson); box-shadow: 0 0 0 3px rgba(220,28,46,0.12);
 }
-#proxyUrl {
+#proxyUrl, #bwStartUrl {
   flex: 1; padding: 12px 0; background: transparent; border: none;
   color: var(--text); font-family: var(--font-body); font-size: 13.5px; outline: none;
 }
-#proxyUrl::placeholder { color: var(--text-3); }
+#proxyUrl::placeholder, #bwStartUrl::placeholder { color: var(--text-3); }
 
 .btn-crimson {
   display: flex; align-items: center; gap: 7px; flex-shrink: 0;

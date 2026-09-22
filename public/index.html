@@ -10,93 +10,273 @@
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="icon" href="/assets/favicon.png" type="image/png" />
   <style>
-    /* Source (AGPL) button — shown only on the Tools tab */
-    .section-right { display: flex; align-items: center; gap: 12px; }
-    .tools-source-btn {
-      display: none; align-items: center; gap: 7px;
-      padding: 7px 14px; border-radius: 9px; font-size: 13px; font-weight: 500;
-      border: 1px solid var(--crimson-border); color: var(--crimson);
-      background: var(--crimson-subtle); text-decoration: none;
-      transition: all var(--t) var(--ease); font-family: var(--font-body);
-    }
-    .tools-source-btn.show { display: inline-flex; }
-    .tools-source-btn:hover { background: var(--crimson); color: #fff; box-shadow: 0 4px 16px var(--crimson-glow); }
-    .tools-source-btn:focus-visible { outline: 2px solid var(--crimson-light); outline-offset: 2px; }
+    html, body { height: 100%; overflow: hidden; }
+    body { display: flex; flex-direction: column; }
+    .bg-grid, .bg-glow { display: none; } /* the browser chrome fills the whole page now */
 
-    /* Persistent AGPL source-offer footer (visible on every tab) */
-    .site-footer {
-      position: relative; z-index: 1; text-align: center;
-      padding: 18px 16px 28px; font-size: 12px; color: var(--text-3);
+    /* ══════════════════════════════════════════════════════════
+       Chrome-style window — fills the entire page
+       ══════════════════════════════════════════════════════════ */
+    .browser {
+      display: flex; flex-direction: column; height: 100vh; width: 100%;
+      background: var(--bg-2);
     }
-    .site-footer a { color: var(--text-2); text-decoration: underline; }
-    .site-footer a:hover { color: var(--crimson); }
-    @media (max-width: 700px) { .site-footer { padding-bottom: 88px; } }
+
+    /* ── Tab strip ── */
+    .browser-tabstrip {
+      display: flex; align-items: flex-end; gap: 0; flex-shrink: 0;
+      background: var(--bg); padding: 8px 8px 0;
+    }
+    .browser-brand {
+      display: flex; align-items: center; flex-shrink: 0; padding: 0 10px 8px 4px;
+    }
+    .browser-brand svg { display: block; }
+    .browser-tabs {
+      display: flex; align-items: flex-end; gap: 2px; min-width: 0; flex: 1;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .browser-tabs::-webkit-scrollbar { display: none; }
+    .browser-tab {
+      display: flex; align-items: center; gap: 8px; width: 208px; max-width: 208px; min-width: 88px;
+      background: var(--bg-3); border: none;
+      border-radius: 10px 10px 0 0; padding: 9px 6px 9px 12px; cursor: pointer;
+      font-size: 12.5px; color: var(--text-3); transition: background .12s var(--ease), color .12s var(--ease);
+      flex-shrink: 1; position: relative; user-select: none;
+    }
+    .browser-tab:hover { color: var(--text-2); background: var(--bg-4); }
+    .browser-tab.active { background: var(--bg-2); color: var(--text); flex-shrink: 0; }
+    .browser-tab-favicon {
+      width: 15px; height: 15px; border-radius: 50%; flex-shrink: 0;
+      background: var(--surface-2); display: flex; align-items: center; justify-content: center;
+      overflow: hidden; color: var(--text-3);
+    }
+    .browser-tab.active .browser-tab-favicon { color: var(--crimson); }
+    .browser-tab-favicon svg { width: 11px; height: 11px; }
+    .browser-tab-favicon img { width: 100%; height: 100%; object-fit: cover; }
+    .browser-tab-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .browser-tab-close {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 19px; height: 19px; border-radius: 50%; border: 0; background: transparent;
+      color: var(--text-3); cursor: pointer; opacity: 0; transition: all .12s var(--ease);
+    }
+    .browser-tab:hover .browser-tab-close, .browser-tab.active .browser-tab-close { opacity: 1; }
+    .browser-tab-close:hover { background: var(--border-2); color: var(--text); }
+    .browser-newtab-btn {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 30px; height: 30px; margin: 0 4px 6px 6px; border-radius: 50%; border: 0;
+      background: transparent; color: var(--text-3); cursor: pointer; transition: all .12s var(--ease);
+    }
+    .browser-newtab-btn:hover { background: var(--bg-4); color: var(--text); }
+
+    /* ── Toolbar (address bar) ── */
+    .browser-toolbar {
+      display: flex; align-items: center; gap: 6px; padding: 8px 10px; flex-shrink: 0;
+      background: var(--bg-2);
+    }
+    .browser-toolbar-btn {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 32px; height: 32px; border-radius: 50%; border: 0; background: transparent;
+      color: var(--text-2); cursor: pointer; transition: all .12s var(--ease);
+    }
+    .browser-toolbar-btn:hover { color: var(--text); background: var(--bg-4); }
+    .browser-toolbar-btn:disabled { opacity: .3; cursor: default; }
+    .browser-toolbar-btn:disabled:hover { background: transparent; color: var(--text-2); }
+    #closeBrowserBtn:hover { background: var(--crimson); color: #fff; }
+    .browser-addr {
+      flex: 1; display: flex; align-items: center; gap: 9px; min-width: 0;
+      background: var(--surface); border: 1px solid transparent; border-radius: 999px; padding: 0 9px 0 15px;
+      transition: border-color .12s var(--ease), background .12s var(--ease);
+    }
+    .browser-addr:focus-within { border-color: var(--crimson-border); background: var(--surface-2); }
+    .browser-addr svg { flex-shrink: 0; }
+    .browser-addr-secure { display: flex; color: var(--text-3); }
+    .browser-addr input {
+      flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--text);
+      font-family: var(--font-body); font-size: 13.5px; padding: 9px 0;
+    }
+    .browser-addr input::placeholder { color: var(--text-3); }
+    .browser-cloak-btn { color: var(--text-2); }
+
+    /* ── Loading bar ── */
+    .browser-loadbar { height: 2px; flex-shrink: 0; background: transparent; position: relative; overflow: hidden; }
+    .browser-loadbar.show::after {
+      content: ""; position: absolute; inset: 0; width: 40%; background: var(--crimson);
+      animation: bw-load 1s ease-in-out infinite;
+    }
+    @keyframes bw-load { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
+
+    /* ── Content area: each tab's page (new-tab page OR loaded iframe) ── */
+    .browser-viewport { position: relative; flex: 1; min-height: 0; background: var(--bg); overflow: hidden; }
+    .tab-page { position: absolute; inset: 0; display: none; overflow: hidden; }
+    .tab-page.active { display: block; }
+    .tab-page iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg-2); }
+
+    /* ══════════════════════════════════════════════════════════
+       New Tab page — search + shortcut tiles
+       ══════════════════════════════════════════════════════════ */
+    .newtab {
+      position: absolute; inset: 0; overflow-y: auto;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 9vh 24px 40px;
+    }
+    .newtab-mark { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
+    .newtab-mark svg { flex-shrink: 0; }
+    .newtab-mark span { font-family: var(--font-display); font-weight: 700; font-size: 30px; }
+    .newtab-mark .accent { color: var(--crimson); }
+
+    .newtab-search {
+      width: 100%; max-width: 600px;
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface); border: 1px solid var(--border-2); border-radius: 999px;
+      padding: 4px 8px 4px 20px; margin-bottom: 34px;
+      transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
+    }
+    .newtab-search:focus-within { border-color: var(--crimson-border); box-shadow: 0 0 0 4px var(--crimson-subtle); }
+    .newtab-search svg { flex-shrink: 0; color: var(--text-3); }
+    .newtab-search input {
+      flex: 1; background: none; border: 0; outline: none; color: var(--text);
+      font-family: var(--font-body); font-size: 15px; padding: 13px 0;
+    }
+    .newtab-search input::placeholder { color: var(--text-3); }
+    .newtab-search-go {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--crimson);
+      color: #fff; cursor: pointer; transition: background .15s var(--ease);
+    }
+    .newtab-search-go:hover { background: var(--crimson-light); }
+
+    .newtab-shortcuts { width: 100%; max-width: 760px; }
+    .newtab-shortcut-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 30px; }
+    .newtab-shortcut {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border); color: var(--text-2);
+      border-radius: 999px; padding: 9px 17px; font-size: 13px; font-family: var(--font-body);
+      cursor: pointer; transition: all .15s var(--ease);
+    }
+    .newtab-shortcut:hover { color: var(--text); border-color: var(--crimson-border); background: var(--crimson-subtle); }
+    .newtab-shortcut .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); flex-shrink: 0; }
+
+    .newtab-section { width: 100%; margin-bottom: 26px; }
+    .newtab-section-title {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--font-display); font-weight: 600; font-size: 15px; color: var(--text-2);
+      margin-bottom: 14px; padding-left: 2px;
+    }
+    .newtab-section-title svg { color: var(--crimson); }
+    .newtab-tile-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px;
+    }
+    .newtab-tile {
+      display: flex; flex-direction: column; align-items: center; gap: 9px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px 10px; cursor: pointer; transition: all .15s var(--ease); text-align: center;
+    }
+    .newtab-tile:hover { border-color: var(--crimson-border); background: var(--crimson-subtle); transform: translateY(-2px); }
+    .newtab-tile-icon {
+      width: 40px; height: 40px; border-radius: 10px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg-3); color: var(--crimson); flex-shrink: 0;
+    }
+    .newtab-tile-icon img { width: 100%; height: 100%; object-fit: cover; }
+    .newtab-tile-name {
+      font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; max-width: 100%;
+    }
+    .newtab-tile:hover .newtab-tile-name { color: var(--text); }
+    .newtab-empty { color: var(--text-3); font-size: 13px; padding: 10px 2px; }
+
+    /* Source / license link, bottom of the new tab page */
+    .newtab-footer {
+      margin-top: auto; padding-top: 30px; text-align: center; font-size: 12px; color: var(--text-3);
+    }
+    .newtab-footer a { color: var(--text-2); text-decoration: underline; }
+    .newtab-footer a:hover { color: var(--crimson); }
+
+    /* ── Cloak menu (kept from before, repositioned under the toolbar) ── */
+    .cloak-wrap { position: relative; }
+    .cloak-menu {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 50;
+      width: 220px; background: var(--surface); border: 1px solid var(--border-2);
+      border-radius: 12px; padding: 8px; box-shadow: 0 12px 40px rgba(0,0,0,.5);
+    }
+    .cloak-menu.open { display: block; }
+    .cloak-title { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); padding: 6px 10px; }
+    .cloak-option {
+      display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px;
+      color: var(--text-2); font-size: 13px; cursor: pointer; transition: all .12s var(--ease);
+    }
+    .cloak-option:hover { background: var(--bg-4); color: var(--text); }
+    .cloak-icon { width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0; }
+    .cloak-divider { height: 1px; background: var(--border); margin: 6px 4px; }
+    .cloak-reset { color: var(--text-3); }
+
+    /* ── Toasts ── */
+    #toastContainer { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 400; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      background: var(--surface); border: 1px solid var(--border-2); color: var(--text);
+      padding: 10px 18px; border-radius: 10px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.4);
+      animation: bw-toast-in .2s var(--ease);
+    }
+    @keyframes bw-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 700px) {
+      .browser-brand { display: none; }
+      .browser-tab { width: 150px; min-width: 70px; }
+      .newtab { padding-top: 6vh; }
+      .newtab-mark span { font-size: 24px; }
+      .newtab-tile-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+    }
   </style>
 </head>
 <body>
 
-  <div class="bg-grid"></div>
-  <div class="bg-glow"></div>
+  <div class="browser" id="browser">
 
-  <nav class="navbar" id="navbar">
-    <div class="nav-inner">
-
-      <a class="logo" href="/">
-        <svg class="logo-hex" width="28" height="28" viewBox="0 0 28 28" fill="none">
+    <!-- ── Tab strip ── -->
+    <div class="browser-tabstrip">
+      <div class="browser-brand">
+        <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
           <path d="M14 2L25.5 8.5V21.5L14 28L2.5 21.5V8.5L14 2Z" fill="#dc1c2e" fill-opacity="0.15" stroke="#dc1c2e" stroke-width="1.5"/>
           <path d="M14 7L21 11V19L14 23L7 19V11L14 7Z" fill="#dc1c2e"/>
         </svg>
-        <span class="logo-text">Crimson<span class="logo-accent">Zone</span></span>
-      </a>
-
-      <div class="nav-tabs">
-        <button class="nav-tab active" data-section="games">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="6" width="20" height="12" rx="4"/>
-            <path d="M7 9v6"/><path d="M4 12h6"/>
-            <path d="M17.5 10.5h.01"/><path d="M20.5 13.5h.01"/>
-          </svg>
-          Games
-        </button>
-
-        <button class="nav-tab" data-section="apps">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-            <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-            <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-          </svg>
-          Apps
-        </button>
-
-        <button class="nav-tab" data-section="tools">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-          </svg>
-          Tools
-        </button>
-
-        <button class="nav-tab" data-section="proxy">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-          </svg>
-          Proxy
-        </button>
       </div>
-
-      <div class="nav-search">
-        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      <div class="browser-tabs" id="browserTabs"></div>
+      <button class="browser-newtab-btn" id="newTabBtn" title="New tab">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        <input type="text" id="searchInput" placeholder="Search..." autocomplete="off" spellcheck="false" />
-        <kbd class="search-kbd">Ctrl+K or ⌘+K</kbd>
-      </div>
+      </button>
+    </div>
 
-      <!-- Cloak -->
+    <!-- ── Toolbar ── -->
+    <div class="browser-toolbar">
+      <button class="browser-toolbar-btn" id="backBtn" title="Back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <button class="browser-toolbar-btn" id="forwardBtn" title="Forward">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+      <button class="browser-toolbar-btn" id="reloadBtn" title="Reload / Home">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      </button>
+      <div class="browser-addr">
+        <span class="browser-addr-secure" id="addrSecureIcon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </span>
+        <input type="text" id="addrInput" placeholder="Search or enter a URL" autocomplete="off" spellcheck="false" />
+      </div>
+      <button class="browser-toolbar-btn" id="fullscreenBtn" title="Fullscreen">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+          <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+        </svg>
+      </button>
+
+      <!-- Tab disguise (cloak) -->
       <div class="cloak-wrap" id="cloakWrap">
-        <button class="cloak-nav-btn" title="Tab Disguise" onclick="toggleCloakMenu()">
+        <button class="browser-toolbar-btn browser-cloak-btn" title="Tab Disguise" id="cloakToggleBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M2 12C2 12 5 5 12 5s10 7 10 7-3 7-10 7S2 12 2 12z"/>
             <circle cx="12" cy="12" r="3"/>
@@ -104,301 +284,516 @@
         </button>
         <div class="cloak-menu" id="cloakMenu">
           <div class="cloak-title">Tab Disguise</div>
-          <div class="cloak-option" onclick="setCloak('google','Google','assets/google.ico')">
-            <img src="/assets/google.ico" class="cloak-icon">
-            Google
+          <div class="cloak-option" data-cloak-id="google" data-cloak-title="Google" data-cloak-icon="/assets/google.ico">
+            <img src="/assets/google.ico" class="cloak-icon"> Google
           </div>
-          <div class="cloak-option" onclick="setCloak('docs','Google Docs','assets/docs.png')">
-            <img src="/assets/docs.png" class="cloak-icon">
-            Google Docs
+          <div class="cloak-option" data-cloak-id="docs" data-cloak-title="Google Docs" data-cloak-icon="/assets/docs.png">
+            <img src="/assets/docs.png" class="cloak-icon"> Google Docs
           </div>
-          <div class="cloak-option" onclick="setCloak('classroom','Home - Classroom','assets/classroom.png')">
-            <img src="/assets/classroom.png" class="cloak-icon">
-            Classroom
+          <div class="cloak-option" data-cloak-id="classroom" data-cloak-title="Home - Classroom" data-cloak-icon="/assets/classroom.png">
+            <img src="/assets/classroom.png" class="cloak-icon"> Classroom
           </div>
-          <div class="cloak-option" onclick="setCloak('khan','Khan Academy','assets/khan.ico')">
-            <img src="/assets/khan.ico" class="cloak-icon">
-            Khan Academy
+          <div class="cloak-option" data-cloak-id="khan" data-cloak-title="Khan Academy" data-cloak-icon="/assets/khan.ico">
+            <img src="/assets/khan.ico" class="cloak-icon"> Khan Academy
           </div>
           <div class="cloak-divider"></div>
-          <div class="cloak-option cloak-reset" onclick="resetCloak()">
+          <div class="cloak-option cloak-reset" id="cloakResetBtn">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.34"/></svg>
             Reset
           </div>
         </div>
       </div>
-    </div>
-  </nav>
 
-  <header class="hero">
-    <div class="hero-content">
-      <div class="hero-badge">
-        <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#dc1c2e"/></svg>
-        Unblocked &amp; Always Online
-      </div>
-      <h1 class="hero-title">Welcome to Crimson<span class="hero-accent">Zone</span></h1>
-      <p class="hero-sub">Games. Apps. Tools. All in one place.</p>
-    </div>
-  </header>
-
-  <main class="main">
-    <div id="recentSection" style="display:none" class="recent-section">
-      <div class="section-header" style="margin-bottom:12px">
-        <h2 class="section-title small">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-          </svg>
-          Recently Played
-        </h2>
-        <button class="btn-text-sm" onclick="clearRecent()">Clear</button>
-      </div>
-      <div class="recent-strip" id="recentStrip"></div>
-    </div>
-
-    <div class="section-header" id="mainSectionHeader">
-      <h2 class="section-title" id="sectionTitle">
-        <svg id="sectionIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="6" width="20" height="12" rx="4"/>
-          <path d="M7 9v6"/><path d="M4 12h6"/>
-          <path d="M17.5 10.5h.01"/><path d="M20.5 13.5h.01"/>
+      <button class="browser-toolbar-btn" id="closeBrowserBtn" title="Close this tab">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
-        Games
-      </h2>
-      <div class="section-right">
-        <a class="tools-source-btn" id="toolsSourceBtn" href="/source.html" title="Source code and license info (AGPL)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-          </svg>
-          Source
-        </a>
-        <span class="section-count" id="sectionCount">Loading...</span>
-      </div>
+      </button>
     </div>
 
-    <div class="grid" id="itemGrid">
-      <div class="card skeleton"></div>
-      <div class="card skeleton"></div>
-      <div class="card skeleton"></div>
-      <div class="card skeleton"></div>
-      <div class="card skeleton"></div>
-      <div class="card skeleton"></div>
-      <div class="card skeleton"></div>
-      <div class="card skeleton"></div>
-    </div>
+    <div class="browser-loadbar" id="loadBar"></div>
 
-    <div class="empty-state" id="emptyState" style="display:none">
-      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#3a3a4e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <p class="empty-text">No results for "<span id="emptyQuery"></span>"</p>
-      <button class="btn-outline" onclick="clearSearch()">Clear Search</button>
-    </div>
+    <!-- ── Viewport: each tab's content lives here ── -->
+    <div class="browser-viewport" id="viewport"></div>
 
-    <div class="error-state" id="errorState" style="display:none">
-      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#3a3a4e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      <p class="error-text">Failed to load content. Please refresh.</p>
-      <button class="btn-outline" onclick="retryLoad()">Try Again</button>
-    </div>
-
-    <div id="proxySection" style="display:none">
-      <div class="proxy-card">
-        <div class="proxy-card-icon">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#dc1c2e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-          </svg>
-        </div>
-        <h2 class="proxy-card-title">Web Proxy</h2>
-        <p class="proxy-card-desc">Access any website through CrimsonZone's proxy. Enter a URL or search term below.</p>
-        <div class="proxy-input-row">
-          <div class="proxy-input-wrap">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#5a5a6e;flex-shrink:0">
-              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-            <input type="text" id="proxyUrl" placeholder="https://example.com or search..." autocomplete="off" spellcheck="false"/>
-          </div>
-          <button class="btn-crimson" onclick="goProxy()">
-            Go
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-            </svg>
-          </button>
-        </div>
-        <div class="proxy-chips">
-          <button class="proxy-chip" onclick="quickProxy('https://duckduckgo.com')">DuckDuckGo</button>
-          <button class="proxy-chip" onclick="quickProxy('https://www.tiktok.com')">TikTok</button>
-          <button class="proxy-chip" onclick="quickProxy('https://wikipedia.org')">Wikipedia</button>
-          <button class="proxy-chip" onclick="quickProxy('https://reddit.com')">Reddit</button>
-          <button class="proxy-chip" onclick="quickProxy('https://github.com')">GitHub</button>
-          <button class="proxy-chip" onclick="quickProxy('https://twitch.tv')">Twitch</button>
-        </div>
-      </div>
-
-      <div class="proxy-frame-wrap" id="proxyFrameWrap" style="display:none">
-        <div class="proxy-frame-bar">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc1c2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-          </svg>
-          <span class="proxy-frame-url" id="proxyFrameUrl"></span>
-          <button class="proxy-frame-close" id="proxyFullscreenBtn" onclick="toggleFullscreen('proxyFrame', 'proxyFullscreenBtn')" title="Fullscreen">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
-              <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
-            </svg>
-          </button>
-          <button class="proxy-frame-close" onclick="closeProxy()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-        <div id="proxyStatus" style="display:none;padding:10px 14px;color:#b8b8c8;font-size:13px"></div>
-        <iframe id="proxyFrame" src="" allowfullscreen></iframe>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- ── Launch Modal ── -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-info">
-          <img class="modal-icon" id="modalIcon" src="" alt="" onerror="this.style.display='none'"/>
-          <span class="modal-name" id="modalName"></span>
-        </div>
-        <div class="modal-actions">
-          <button class="modal-btn" id="modalFullscreenBtn" onclick="toggleFullscreen('gameFrame', 'modalFullscreenBtn')" title="Fullscreen">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
-              <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
-            </svg>
-          </button>
-          <button class="modal-btn" id="modalNewTab" title="Open in new tab">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-              <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-            </svg>
-          </button>
-          <button class="modal-btn modal-close-btn" id="modalClose" title="Close">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div class="modal-body">
-        <iframe id="gameFrame" src="" allowfullscreen></iframe>
-      </div>
-    </div>
   </div>
 
   <div id="toastContainer"></div>
 
-  <!-- Mobile nav -->
-  <nav class="mobile-nav" id="mobileNav">
-    <button class="mobile-tab active" data-section="games">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7 9v6"/><path d="M4 12h6"/><path d="M17.5 10.5h.01"/><path d="M20.5 13.5h.01"/></svg>
-      <span>Games</span>
-    </button>
-    <button class="mobile-tab" data-section="apps">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-      <span>Apps</span>
-    </button>
-    <button class="mobile-tab" data-section="tools">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-      <span>Tools</span>
-    </button>
-    <button class="mobile-tab" data-section="proxy">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-      <span>Proxy</span>
-    </button>
-  </nav>
+  <!-- New Tab page template (cloned for every tab) -->
+  <template id="newTabTemplate">
+    <div class="newtab">
+      <div class="newtab-mark">
+        <svg width="30" height="30" viewBox="0 0 28 28" fill="none">
+          <path d="M14 2L25.5 8.5V21.5L14 28L2.5 21.5V8.5L14 2Z" fill="#dc1c2e" fill-opacity="0.15" stroke="#dc1c2e" stroke-width="1.5"/>
+          <path d="M14 7L21 11V19L14 23L7 19V11L14 7Z" fill="#dc1c2e"/>
+        </svg>
+        <span>Crimson<span class="accent">Zone</span></span>
+      </div>
 
-  <footer class="site-footer">
-    CrimsonZone is free software under the
-    <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL v3</a>.
-    <a href="https://github.com/worldofprodigyteam36-svg/CrimsonZone" target="_blank" rel="noopener">Source code</a>
-    &middot; <a href="/source.html">License &amp; credits</a>
-  </footer>
+      <div class="newtab-search">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" class="nt-search-input" placeholder="Search or enter a URL" autocomplete="off" spellcheck="false" />
+        <button class="newtab-search-go nt-search-go" title="Go">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="newtab-shortcuts">
+        <div class="newtab-shortcut-row">
+          <button class="newtab-shortcut" data-url="https://duckduckgo.com"><span class="dot"></span>DuckDuckGo</button>
+          <button class="newtab-shortcut" data-url="https://www.tiktok.com"><span class="dot"></span>TikTok</button>
+          <button class="newtab-shortcut" data-url="https://wikipedia.org"><span class="dot"></span>Wikipedia</button>
+          <button class="newtab-shortcut" data-url="https://reddit.com"><span class="dot"></span>Reddit</button>
+          <button class="newtab-shortcut" data-url="https://github.com"><span class="dot"></span>GitHub</button>
+          <button class="newtab-shortcut" data-url="https://twitch.tv"><span class="dot"></span>Twitch</button>
+        </div>
+
+        <div class="newtab-section">
+          <div class="newtab-section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7 9v6"/><path d="M4 12h6"/><path d="M17.5 10.5h.01"/><path d="M20.5 13.5h.01"/></svg>
+            Games
+          </div>
+          <div class="newtab-tile-grid nt-tiles" data-source="games"><div class="newtab-empty">Loading...</div></div>
+        </div>
+
+        <div class="newtab-section">
+          <div class="newtab-section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            Apps
+          </div>
+          <div class="newtab-tile-grid nt-tiles" data-source="apps"><div class="newtab-empty">Loading...</div></div>
+        </div>
+
+        <div class="newtab-section">
+          <div class="newtab-section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            Tools
+          </div>
+          <div class="newtab-tile-grid nt-tiles" data-source="tools"><div class="newtab-empty">Loading...</div></div>
+        </div>
+      </div>
+
+      <div class="newtab-footer">
+        CrimsonZone is free software under the
+        <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL v3</a>.
+        <a href="https://github.com/worldofprodigyteam36-svg/CrimsonZone" target="_blank" rel="noopener">Source code</a>
+        &middot; <a href="/source.html" target="_blank" rel="noopener">License &amp; credits</a>
+      </div>
+    </div>
+  </template>
 
   <!-- BareMux + Ultraviolet -->
   <script src="/baremux/index.js"></script>
   <script>
-    (async () => {
-      // Load UV bundle dynamically to avoid SW interception
-      await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = '/uv/uv.bundle.js';
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-
-      // Now load config (Ultraviolet is defined)
-      await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = '/uv/uv.config.js';
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-
-      console.log('[UV] Ultraviolet loaded:', typeof Ultraviolet);
-
-      // Setup BareMux transport
-      const connection = new BareMux.BareMuxConnection('/baremux/worker.js');
-      const wispProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      await connection.setTransport('/epoxy-compat/index.mjs', [{
-        wisp: wispProtocol + '//' + location.host + '/wisp/',
-      }]);
-
-      // Register SW
-      if ('serviceWorker' in navigator) {
-        const swUrl = '/uv/sw.js';
-        const swScope = '/';
-        const expectedSwUrl = new URL(swUrl, location.href).href;
-        navigator.serviceWorker.getRegistration('/uv/')
-          .then(async legacy => {
-            if (legacy) await legacy.unregister();
-            return navigator.serviceWorker.getRegistration(swScope);
-          })
-          .then(async existing => {
-            const worker = existing && (existing.active || existing.waiting || existing.installing);
-            if (worker && worker.scriptURL !== expectedSwUrl) {
-              await existing.unregister();
-            }
-            return navigator.serviceWorker.register(swUrl, { scope: swScope });
-          })
-          .then(() => navigator.serviceWorker.ready)
-          .then(r => console.log('[UV] SW registered'))
-          .catch(err => console.warn('[UV] SW failed:', err));
-      }
-    })();
-  </script>
-  <script>
-    // Show the "Source" button only on the Tools tab (works for desktop + mobile tabs)
     (function () {
-      var btn = document.getElementById('toolsSourceBtn');
-      if (!btn) return;
-      function sync() {
-        var active = document.querySelector('.nav-tab.active, .mobile-tab.active');
-        btn.classList.toggle('show', !!active && active.getAttribute('data-section') === 'tools');
+      'use strict';
+
+      // ── Shared item cache (games/apps/tools), fetched once ──
+      const itemCache = {};
+      async function fetchItems(source) {
+        if (itemCache[source]) return itemCache[source];
+        try {
+          const res = await fetch('/api/' + source);
+          const json = await res.json();
+          const items = (json && json.data) || [];
+          itemCache[source] = items;
+          return items;
+        } catch (err) {
+          console.error('[CZ] failed to load', source, err);
+          itemCache[source] = [];
+          return [];
+        }
       }
-      document.querySelectorAll('.nav-tab, .mobile-tab').forEach(function (t) {
-        t.addEventListener('click', function () { setTimeout(sync, 0); });
+
+      // ── UV / BareMux proxy setup (shared across all tabs) ──
+      let uvReady = false;
+      let uvReadyPromise = null;
+
+      function loadScriptOnce(src, flag) {
+        if (window[flag]) return Promise.resolve();
+        window[flag] = true;
+        return new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = src; s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      function waitForActiveSW(registration) {
+        if (registration.active) return Promise.resolve(registration);
+        return new Promise((resolve, reject) => {
+          let worker = registration.installing || registration.waiting;
+          const timeout = setTimeout(() => reject(new Error('Service worker activation timed out.')), 15000);
+          function check() {
+            if (registration.active) { clearTimeout(timeout); resolve(registration); return; }
+            worker = registration.installing || registration.waiting;
+            if (worker && worker.state === 'activated') { clearTimeout(timeout); resolve(registration); }
+          }
+          registration.addEventListener('updatefound', check);
+          if (worker) worker.addEventListener('statechange', check);
+          check();
+        });
+      }
+
+      function ensureProxyReady() {
+        if (uvReady) return Promise.resolve();
+        if (uvReadyPromise) return uvReadyPromise;
+        uvReadyPromise = (async () => {
+          await loadScriptOnce('/uv/uv.bundle.js', '_cz_uv_bundle_loaded');
+          await loadScriptOnce('/uv/uv.config.js', '_cz_uv_config_loaded');
+
+          if (!window._cz_connection) {
+            window._cz_connection = new BareMux.BareMuxConnection('/baremux/worker.js');
+            const wispProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            await window._cz_connection.setTransport('/epoxy-compat/index.mjs', [{
+              wisp: wispProtocol + '//' + location.host + '/wisp/',
+            }]);
+          }
+
+          if ('serviceWorker' in navigator) {
+            const swUrl = '/uv/sw.js';
+            const swScope = '/';
+            const expectedSwUrl = new URL(swUrl, location.href).href;
+            const legacy = await navigator.serviceWorker.getRegistration('/uv/');
+            if (legacy) await legacy.unregister();
+            let existing = await navigator.serviceWorker.getRegistration(swScope);
+            const worker = existing && (existing.active || existing.waiting || existing.installing);
+            if (worker && worker.scriptURL !== expectedSwUrl) { await existing.unregister(); existing = null; }
+            const reg = existing || await navigator.serviceWorker.register(swUrl, { scope: swScope });
+            await waitForActiveSW(reg);
+            await navigator.serviceWorker.ready;
+          }
+          uvReady = true;
+        })().catch(err => {
+          uvReadyPromise = null;
+          throw err;
+        });
+        return uvReadyPromise;
+      }
+
+      function normalize(raw) {
+        raw = (raw || '').trim();
+        if (!raw) return '';
+        if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+        return raw.includes('.') && !raw.includes(' ')
+          ? 'https://' + raw
+          : 'https://duckduckgo.com/?q=' + encodeURIComponent(raw);
+      }
+      function hostLabel(url) {
+        try { return new URL(url).hostname.replace(/^www\./, ''); }
+        catch (e) { return url; }
+      }
+      function esc(s) {
+        const d = document.createElement('div'); d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+      }
+
+      // ══════════════════════════════════════════════════════
+      // Tab manager
+      // ══════════════════════════════════════════════════════
+      const els = {
+        tabs: document.getElementById('browserTabs'),
+        viewport: document.getElementById('viewport'),
+        addr: document.getElementById('addrInput'),
+        secure: document.getElementById('addrSecureIcon'),
+        loadBar: document.getElementById('loadBar'),
+        back: document.getElementById('backBtn'),
+        forward: document.getElementById('forwardBtn'),
+        reload: document.getElementById('reloadBtn'),
+        fullscreen: document.getElementById('fullscreenBtn'),
+        closeBtn: document.getElementById('closeBrowserBtn'),
+        newTabBtn: document.getElementById('newTabBtn'),
+      };
+      const newTabTemplate = document.getElementById('newTabTemplate');
+
+      let tabs = [];
+      let activeId = null;
+      let nextId = 1;
+
+      function currentTab() { return tabs.find(t => t.id === activeId); }
+
+      function renderTabStrip() {
+        els.tabs.innerHTML = '';
+        tabs.forEach(t => {
+          const el = document.createElement('div');
+          el.className = 'browser-tab' + (t.id === activeId ? ' active' : '');
+          el.innerHTML =
+            '<span class="browser-tab-favicon"></span>' +
+            '<span class="browser-tab-title"></span>' +
+            '<button class="browser-tab-close" title="Close tab">' +
+              '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+            '</button>';
+          el.querySelector('.browser-tab-title').textContent = t.title;
+          const favicon = el.querySelector('.browser-tab-favicon');
+          if (t.kind === 'newtab') {
+            favicon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+          } else {
+            favicon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+          }
+          el.addEventListener('click', (e) => {
+            if (e.target.closest('.browser-tab-close')) return;
+            activateTab(t.id);
+          });
+          el.querySelector('.browser-tab-close').addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeTab(t.id);
+          });
+          t.tabEl = el;
+          els.tabs.appendChild(el);
+        });
+      }
+
+      function updateAddressBar() {
+        const t = currentTab();
+        if (!t) { els.addr.value = ''; return; }
+        els.addr.value = t.kind === 'newtab' ? '' : (t.url || '');
+        els.addr.placeholder = 'Search or enter a URL';
+        els.secure.style.visibility = t.kind === 'newtab' ? 'hidden' : 'visible';
+      }
+
+      function activateTab(id) {
+        activeId = id;
+        tabs.forEach(t => t.pageEl.classList.toggle('active', t.id === id));
+        renderTabStrip();
+        updateAddressBar();
+      }
+
+      function setLoading(on) {
+        els.loadBar.classList.toggle('show', !!on);
+      }
+
+      function buildNewTabPage() {
+        const frag = newTabTemplate.content.cloneNode(true);
+        const page = document.createElement('div');
+        page.className = 'tab-page';
+        page.appendChild(frag);
+        return page;
+      }
+
+      function wireNewTabPage(tab) {
+        const root = tab.pageEl;
+        const input = root.querySelector('.nt-search-input');
+        const go = root.querySelector('.nt-search-go');
+        const doGo = () => navigateTab(tab, input.value);
+        go.addEventListener('click', doGo);
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') doGo(); });
+
+        root.querySelectorAll('.newtab-shortcut[data-url]').forEach(btn => {
+          btn.addEventListener('click', () => navigateTab(tab, btn.dataset.url));
+        });
+
+        root.querySelectorAll('.nt-tiles').forEach(async (grid) => {
+          const source = grid.dataset.source;
+          const section = grid.closest('.newtab-section');
+          const items = await fetchItems(source);
+          if (!items.length) {
+            if (section) section.style.display = 'none';
+            return;
+          }
+          grid.innerHTML = '';
+          items.forEach(item => {
+            const tile = document.createElement('div');
+            tile.className = 'newtab-tile';
+            const iconSrc = item.icon || '';
+            tile.innerHTML =
+              '<div class="newtab-tile-icon">' +
+                (iconSrc
+                  ? '<img src="' + esc(iconSrc) + '" alt="" onerror="this.parentElement.innerHTML=\'' + fallbackIconSvg(source) + '\'">'
+                  : fallbackIconSvg(source)) +
+              '</div>' +
+              '<div class="newtab-tile-name"></div>';
+            tile.querySelector('.newtab-tile-name').textContent = item.title || item.name || 'Untitled';
+            tile.title = item.description ? (item.title + ' — ' + item.description) : (item.title || '');
+            tile.addEventListener('click', () => openContentTab(item, source));
+            grid.appendChild(tile);
+          });
+        });
+      }
+
+      function fallbackIconSvg(source) {
+        const icons = {
+          games: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7 9v6"/><path d="M4 12h6"/></svg>',
+          apps: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+          tools: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+        };
+        return icons[source] || icons.apps;
+      }
+
+      // Open a New Tab (the default page shown when you press "+")
+      function openNewTab() {
+        const page = buildNewTabPage();
+        els.viewport.appendChild(page);
+        const tab = { id: nextId++, kind: 'newtab', title: 'New Tab', url: '', pageEl: page };
+        tabs.push(tab);
+        wireNewTabPage(tab);
+        activateTab(tab.id);
+        return tab;
+      }
+
+      // Turn a tab (usually a fresh New Tab) into loaded content: a game/app/tool, opened directly (not proxied)
+      function openContentTab(item, source) {
+        const t = currentTab() && currentTab().kind === 'newtab' ? currentTab() : openNewTab();
+        loadDirect(t, item.url, item.title || item.name || hostLabel(item.url));
+      }
+
+      function loadDirect(tab, url, title) {
+        tab.kind = 'content';
+        tab.url = url;
+        tab.title = title || hostLabel(url);
+        tab.pageEl.innerHTML = '';
+        const iframe = document.createElement('iframe');
+        iframe.allowFullscreen = true;
+        setLoading(true);
+        iframe.addEventListener('load', () => { if (currentTab() === tab) setLoading(false); });
+        iframe.src = url;
+        tab.pageEl.appendChild(iframe);
+        tab.iframe = iframe;
+        renderTabStrip();
+        if (currentTab() === tab) updateAddressBar();
+      }
+
+      // Turn a tab into a proxied website (typed URL / search / shortcut chip)
+      function navigateTab(tab, rawUrl) {
+        const url = normalize(rawUrl);
+        if (!url) return;
+        tab.kind = 'content';
+        tab.url = url;
+        tab.title = hostLabel(url);
+        tab.pageEl.innerHTML = '';
+        const iframe = document.createElement('iframe');
+        iframe.allowFullscreen = true;
+        setLoading(true);
+        iframe.addEventListener('load', () => { if (currentTab() === tab) setLoading(false); });
+        tab.pageEl.appendChild(iframe);
+        tab.iframe = iframe;
+        renderTabStrip();
+        if (currentTab() === tab) updateAddressBar();
+
+        ensureProxyReady().then(() => {
+          if (typeof __uv$config === 'undefined') throw new Error('Proxy config not loaded.');
+          iframe.src = '/uv/service/' + __uv$config.encodeUrl(url);
+        }).catch(err => {
+          console.error('[CZ] navigate failed:', err);
+          setLoading(false);
+          showToast('Could not load that page. Try again.');
+        });
+      }
+
+      function closeTab(id) {
+        const idx = tabs.findIndex(t => t.id === id);
+        if (idx === -1) return;
+        const [t] = tabs.splice(idx, 1);
+        if (t.pageEl) t.pageEl.remove();
+
+        if (tabs.length === 0) {
+          openNewTab();
+          return;
+        }
+        if (activeId === id) {
+          const next = tabs[idx] || tabs[idx - 1] || tabs[0];
+          activateTab(next.id);
+        } else {
+          renderTabStrip();
+        }
+      }
+
+      // ── Toolbar wiring ──
+      els.newTabBtn.addEventListener('click', () => openNewTab());
+      els.addr.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        const t = currentTab();
+        if (!t) return;
+        navigateTab(t, els.addr.value);
       });
-      sync();
+      els.reload.addEventListener('click', () => {
+        const t = currentTab();
+        if (!t) return;
+        if (t.kind === 'newtab') return;
+        if (t.iframe) { setLoading(true); t.iframe.src = t.iframe.src; }
+      });
+      els.back.addEventListener('click', () => {
+        const t = currentTab();
+        if (t && t.iframe) { try { t.iframe.contentWindow.history.back(); } catch (e) {} }
+      });
+      els.forward.addEventListener('click', () => {
+        const t = currentTab();
+        if (t && t.iframe) { try { t.iframe.contentWindow.history.forward(); } catch (e) {} }
+      });
+      els.fullscreen.addEventListener('click', () => {
+        const browserEl = document.getElementById('browser');
+        if (!document.fullscreenElement) browserEl.requestFullscreen().catch(() => {});
+        else document.exitFullscreen().catch(() => {});
+      });
+      els.closeBtn.addEventListener('click', () => {
+        const t = currentTab();
+        if (t) closeTab(t.id);
+      });
+
+      document.addEventListener('keydown', (e) => {
+        const mod = e.ctrlKey || e.metaKey;
+        if (mod && e.key.toLowerCase() === 't') { e.preventDefault(); openNewTab(); }
+        if (mod && e.key.toLowerCase() === 'w') { e.preventDefault(); const t = currentTab(); if (t) closeTab(t.id); }
+        if (mod && e.key.toLowerCase() === 'l') { e.preventDefault(); els.addr.focus(); els.addr.select(); }
+      });
+
+      // ── Tab disguise (cloak) ──
+      const cloakWrap = document.getElementById('cloakWrap');
+      const cloakMenu = document.getElementById('cloakMenu');
+      document.getElementById('cloakToggleBtn').addEventListener('click', () => cloakMenu.classList.toggle('open'));
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#cloakWrap')) cloakMenu.classList.remove('open');
+      });
+      document.querySelectorAll('.cloak-option[data-cloak-id]').forEach(opt => {
+        opt.addEventListener('click', () => {
+          const title = opt.dataset.cloakTitle, icon = opt.dataset.cloakIcon, id = opt.dataset.cloakId;
+          document.title = title;
+          let link = document.querySelector("link[rel~='icon']");
+          if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+          link.href = icon;
+          try { localStorage.setItem('cz_cloak', JSON.stringify({ id, title, icon })); } catch (e) {}
+          cloakMenu.classList.remove('open');
+          showToast('Tab disguised as ' + title);
+        });
+      });
+      document.getElementById('cloakResetBtn').addEventListener('click', () => {
+        document.title = 'CrimsonZone';
+        let link = document.querySelector("link[rel~='icon']");
+        if (link) link.href = '/assets/favicon.png';
+        try { localStorage.removeItem('cz_cloak'); } catch (e) {}
+        cloakMenu.classList.remove('open');
+        showToast('Tab restored');
+      });
+      (function restoreCloak() {
+        try {
+          const saved = localStorage.getItem('cz_cloak');
+          if (!saved) return;
+          const { title, icon } = JSON.parse(saved);
+          document.title = title;
+          let link = document.querySelector("link[rel~='icon']");
+          if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+          link.href = icon;
+        } catch (e) {}
+      })();
+
+      // ── Toasts ──
+      function showToast(msg) {
+        const c = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        c.appendChild(el);
+        setTimeout(() => el.remove(), 2600);
+      }
+
+      // ── Boot: always start with one New Tab page ──
+      openNewTab();
+      ensureProxyReady().catch(err => console.error('[CZ] proxy pre-warm failed:', err));
     })();
   </script>
-  <script src="/js/parser.js"></script>
-  <script src="/js/app.js"></script>
 </body>
 </html>
